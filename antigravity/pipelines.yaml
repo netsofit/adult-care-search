@@ -1,0 +1,7 @@
+pipelines:
+  deploy:
+    steps:
+      - name: build-image
+        command: docker build . -t adult-care-app:latest
+      - name: deploy-k8s
+        command: kubectl apply -f k8s/

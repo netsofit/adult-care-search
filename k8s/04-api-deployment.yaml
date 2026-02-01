@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adult-care-app
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adult-care-app
+  template:
+    metadata:
+      labels:
+        app: adult-care-app
+    spec:
+      containers:
+        - name: app
+          image: adult-care-app:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: adult-care-db
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: adult-care-db-secret
+                  key: postgres-user
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: adult-care-db-secret
+                  key: postgres-password
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adult-care-app
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app: adult-care-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adult-care-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - adultcare.netsofit.com # Placeholder
+      secretName: adult-care-tls
+  rules:
+    - host: adultcare.netsofit.com # Placeholder
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adult-care-app
+                port:
+                  number: 80

@@ -1,0 +1,4 @@
+project_name: adult-care-search
+description: Adult Care Search Application with Spring Boot and GraphQL
+version: 0.1.0
+owner: netsofit

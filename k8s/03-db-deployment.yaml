@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adult-care-db
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adult-care-db
+  template:
+    metadata:
+      labels:
+        app: adult-care-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: adult-care-db-secret
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: adult-care-db-secret
+                  key: postgres-password
+            - name: POSTGRES_DB
+              value: adultcaredb
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: adult-care-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adult-care-db
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selector:
+    app: adult-care-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
