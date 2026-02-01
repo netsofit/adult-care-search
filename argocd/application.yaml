@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adult-care-search
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/netsofit/adult-care-search.git # UPDATE THIS to your actual repo URL
+    targetRevision: HEAD
+    path: k8s # Update if project is in a subdirectory (e.g. adult-care-search/k8s)
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
